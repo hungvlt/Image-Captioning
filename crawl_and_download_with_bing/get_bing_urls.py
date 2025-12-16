@@ -10,7 +10,7 @@ from icrawler.downloader import Downloader
 # CONFIG
 # ===============================
 KEYWORDS = [
-    "Da Nang City",
+    "bird is flying over the lake",
 ]
 
 MAX_LINKS = 1000

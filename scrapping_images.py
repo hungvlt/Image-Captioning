@@ -2,16 +2,22 @@ import os
 import requests
 import pandas as pd
 from serpapi import GoogleSearch
+import configparser
 
-SERP_API_KEY = os.environ.get("SERPAPI_API_KEY")
+# Read API key from secret.ini
+config = configparser.ConfigParser()
+config.read("secret.ini")
+SERP_API_KEY = config.get("SERPAPI", "API_KEY", fallback="").strip()
+
 if not SERP_API_KEY:
-    raise ValueError("SERP_API_KEY not found")
+    raise ValueError("SERP_API_KEY not found in secret.ini")
 
-QUERY = "Da Nang City"
-CITY = "danang"
+QUERY = "bird is flying over the lake"
+ANIMAL = "bird"
 MAX_IMAGES = 100
 
-os.makedirs("images", exist_ok=True)
+folder_name = f"images/{ANIMAL}"
+os.makedirs(folder_name, exist_ok=True)
 
 params = {
     "engine": "google_images",
@@ -46,13 +52,13 @@ for img in results.get("images_results", []):
         if len(caption.split()) < 5:
             continue
 
-        img_name = f"{CITY}_{count}.jpg"
+        img_name = f"{ANIMAL}_{count}.jpg"
 
         response = requests.get(img_url, headers=HEADERS, timeout=10)
         if response.status_code != 200:
             continue
 
-        with open(f"images/{img_name}", "wb") as f:
+        with open(f"{folder_name}/{img_name}", "wb") as f:
             f.write(response.content)
 
         data.append({
