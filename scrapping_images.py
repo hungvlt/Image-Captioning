@@ -12,8 +12,8 @@ SERP_API_KEY = config.get("SERPAPI", "API_KEY", fallback="").strip()
 if not SERP_API_KEY:
     raise ValueError("SERP_API_KEY not found in secret.ini")
 
-QUERY = "bird is flying over the lake"
-ANIMAL = "bird"
+QUERY = "eagle perched on a tree branch"
+ANIMAL = "eagle"
 MAX_IMAGES = 100
 
 folder_name = f"images/{ANIMAL}"
@@ -36,8 +36,17 @@ HEADERS = {
     )
 }
 
+# Check existing images to continue numbering
+existing_images = [f for f in os.listdir(folder_name) if f.startswith(f"{ANIMAL}_") and f.endswith(".jpg")]
+if existing_images:
+    # Extract numbers from filenames like "eagle_1.jpg"
+    numbers = [int(f.replace(f"{ANIMAL}_", "").replace(".jpg", "")) for f in existing_images]
+    count = max(numbers) + 1
+else:
+    count = 1
+
 data = []
-count = 1
+downloaded = 0  # Track images downloaded in this run
 
 for img in results.get("images_results", []):
     try:
@@ -67,13 +76,19 @@ for img in results.get("images_results", []):
         })
 
         count += 1
-        if count > MAX_IMAGES:
+        downloaded += 1
+        if downloaded >= MAX_IMAGES:
             break
 
     except Exception as e:
         continue
 
 df = pd.DataFrame(data)
-df.to_csv("captions.csv", index=False)
+
+# Append to existing CSV or create new one
+if os.path.exists("captions.csv"):
+    df.to_csv("captions.csv", mode='a', header=False, index=False)
+else:
+    df.to_csv("captions.csv", index=False)
 
 print(f"DONE — downloaded {len(df)} images")
